@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173d35"><meta name="description" content="Personal food, macro, weight and workout tracker">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>My Recomp</title>
+<style>
+:root{--bg:#f4f7f4;--card:#fff;--ink:#18342d;--muted:#71817b;--green:#24785d;--pale:#e5f2eb;--line:#e3ebe5;--orange:#c47b36;--red:#b85b52}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding-bottom:86px}
+header{background:#173d35;color:white;padding:20px 18px 18px;border-radius:0 0 22px 22px;position:sticky;top:0;z-index:3}
+header .top{display:flex;align-items:center;justify-content:space-between;gap:10px}h1{font-size:22px;margin:0}header p{margin:5px 0 0;color:#d2e5dc;font-size:13px}
+button,.btn{border:0;border-radius:12px;padding:11px 14px;background:var(--green);color:white;font-weight:650;font-size:14px;cursor:pointer}
+button.secondary{background:var(--pale);color:var(--green)}button.ghost{background:transparent;border:1px solid #ffffff70;color:white}
+main{max-width:760px;margin:auto;padding:15px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 3px calc(8px + env(safe-area-inset-bottom));z-index:5}
+nav button{background:transparent;color:var(--muted);padding:8px 5px;font-size:11px;flex:1;border-radius:10px}nav button.active{background:var(--pale);color:var(--green)}
+.page{display:none}.page.active{display:block}
+h2{font-size:18px;margin:18px 2px 10px}h3{font-size:15px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;margin:10px 0;box-shadow:0 3px 12px #193d3510}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{background:var(--pale);border-radius:14px;padding:12px}.metric b{display:block;font-size:21px}.metric small{color:var(--muted)}
+.bar{height:9px;background:#edf1ed;border-radius:10px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:var(--green);border-radius:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.muted{color:var(--muted);font-size:13px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.tabs button{padding:8px 11px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}textarea{grid-column:1/-1;min-height:64px}form .wide{grid-column:1/-1}
+.entry{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.entry:last-child{border:0}.entry strong{font-size:14px}.entry small{display:block;color:var(--muted);font-size:12px}
+.pill{font-size:11px;background:var(--pale);color:var(--green);padding:4px 8px;border-radius:20px}
+canvas{width:100%;height:190px;display:block}
+.notice{background:#fff6e9;border:1px solid #f1dfc4;border-radius:12px;padding:11px;font-size:12px;color:#79572d}
+.empty{text-align:center;padding:22px;color:var(--muted);font-size:13px}
+button.danger{background:#f9e9e7;color:var(--red);padding:7px 10px}
+@media(min-width:600px){main{padding:20px}.grid.four{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body>
+<header><div class="top"><div><h1>My Recomp 🌿</h1><p>Your food, strength & progress tracker</p></div><button id="installBtn" class="ghost" hidden>Install app</button></div></header>
+<main>
+<section id="home" class="page active">
+ <div class="row"><h2>Today at a glance</h2><span class="pill" id="todayLabel"></span></div>
+ <div class="grid">
+  <div class="metric"><small>Calories</small><b id="kcalNow">0</b><small id="kcalGoal">of 1,700 kcal</small><div class="bar"><i id="kcalBar"></i></div></div>
+  <div class="metric"><small>Protein</small><b id="proteinNow">0 g</b><small id="proteinGoal">of 90 g</small><div class="bar"><i id="proteinBar"></i></div></div>
+  <div class="metric"><small>Carbs</small><b id="carbsNow">0 g</b><small id="carbsGoal">of 220 g</small><div class="bar"><i id="carbsBar"></i></div></div>
+  <div class="metric"><small>Fat</small><b id="fatNow">0 g</b><small id="fatGoal">of 51 g</small><div class="bar"><i id="fatBar"></i></div></div>
+ </div>
+ <div class="card"><div class="row"><h3>Quick add food</h3><span class="muted">Today</span></div><button onclick="showPage('food')">＋ Add food & macros</button><div id="todayFoods"></div></div>
+ <div class="grid"><div class="card"><h3>Latest weight</h3><div class="row"><b id="latestWeight" style="font-size:24px">—</b><span class="muted">kg</span></div><small class="muted">Track trends, not daily fluctuations</small></div><div class="card"><h3>Workouts this week</h3><b id="weekWorkouts" style="font-size:24px">0</b><small class="muted">sessions logged</small></div></div>
+ <div class="notice">Your starting targets are estimates: 1,700 kcal · 90 g protein · 220 g carbs · 51 g fat. Adjust based on energy, hunger, strength and weight trends—not one day.</div>
+</section>
+<section id="food" class="page">
+ <h2>Food diary</h2><div class="card"><form id="foodForm">
+  <div class="wide"><label>Food / meal</label><input id="foodName" required placeholder="e.g. eggs, rice, chicken"></div>
+  <div><label>Calories (kcal)</label><input id="foodKcal" type="number" min="0" step="0.1" required></div>
+  <div><label>Protein (g)</label><input id="foodProtein" type="number" min="0" step="0.1" value="0"></div>
+  <div><label>Carbs (g)</label><input id="foodCarbs" type="number" min="0" step="0.1" value="0"></div>
+  <div><label>Fat (g)</label><input id="foodFat" type="number" min="0" step="0.1" value="0"></div>
+  <div class="wide"><label>Date</label><input id="foodDate" type="date" required></div>
+  <button class="wide" type="submit">Add to diary</button>
+ </form></div>
+ <div class="card"><div class="row"><h3>Entries</h3><input id="foodFilter" type="date" style="max-width:155px"></div><div id="foodList"></div></div>
+</section>
+<section id="progress" class="page">
+ <h2>Body progress</h2><div class="card"><h3>Log measurements</h3><form id="weightForm">
+  <div><label>Date</label><input id="weightDate" type="date" required></div><div><label>Weight (kg)</label><input id="weightValue" type="number" min="20" max="250" step="0.1" required></div>
+  <div><label>Waist (cm, optional)</label><input id="waistValue" type="number" min="20" max="200" step="0.1"></div><div><label>Hips (cm, optional)</label><input id="hipsValue" type="number" min="20" max="200" step="0.1"></div>
+  <button class="wide">Save progress</button></form></div>
+ <div class="card"><h3>Weight trend</h3><canvas id="weightChart" width="700" height="260"></canvas><div id="weightList"></div></div>
+ <div class="notice">Weigh under similar conditions (for example, morning after using the bathroom). Compare weekly averages; menstrual cycle, salt and digestion can shift scale weight.</div>
+</section>
+<section id="workout" class="page">
+ <h2>Workout log</h2><div class="card"><form id="workoutForm">
+  <div><label>Date</label><input id="workoutDate" type="date" required></div><div><label>Session type</label><select id="workoutType"><option>Full body</option><option>Lower body</option><option>Upper body</option><option>Core</option><option>Cardio / walking</option><option>Mobility / recovery</option></select></div>
+  <div class="wide"><label>Exercises / notes</label><textarea id="workoutNotes" placeholder="e.g. squats 3×10, rows 3×12"></textarea></div>
+  <button class="wide">Save workout</button></form></div>
+ <div class="card"><h3>Recent sessions</h3><div id="workoutList"></div></div>
+</section>
+<section id="settings" class="page">
+ <h2>Targets & backup</h2><div class="card"><h3>Daily macro targets</h3><form id="targetForm">
+  <div><label>Calories</label><input id="targetKcal" type="number" min="500"></div><div><label>Protein (g)</label><input id="targetProtein" type="number" min="1"></div>
+  <div><label>Carbs (g)</label><input id="targetCarbs" type="number" min="1"></div><div><label>Fat (g)</label><input id="targetFat" type="number" min="1"></div><button class="wide">Save targets</button></form></div>
+ <div class="card"><h3>Your data</h3><p class="muted">Your entries stay on this device/browser. Export a backup regularly, especially before clearing browser data or changing phones.</p><div class="tabs"><button onclick="exportData()">Export backup</button><button class="secondary" onclick="document.getElementById('importFile').click()">Import backup</button><input id="importFile" type="file" accept="application/json" hidden></div><button class="danger" onclick="clearData()">Delete all tracker data</button></div>
+ <div class="notice">This tracker is for personal organisation, not medical advice. Your calorie and macro targets are starting estimates, not a requirement to hit perfectly every day.</div>
+</section>
+</main>
+<nav>
+<button class="active" data-page="home">⌂<br>Home</button><button data-page="food">＋<br>Food</button><button data-page="progress">↗<br>Progress</button><button data-page="workout">◆<br>Workout</button><button data-page="settings">⚙<br>Settings</button>
+</nav>
+<script>
+const KEY='myRecompAndroid_v1';
+const defaults={targets:{kcal:1700,protein:90,carbs:220,fat:51},foods:[],weights:[],workouts:[]};
+let db=load();
+function load(){try{return {...structuredClone(defaults),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return structuredClone(defaults)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function today(){return new Date().toISOString().slice(0,10)}
+function num(id){return Number(document.getElementById(id).value)||0}
+function fmt(x){return Math.round(x*10)/10}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===p));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));if(p==='progress')drawChart();window.scrollTo(0,0)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+function totals(date){return db.foods.filter(x=>x.date===date).reduce((a,x)=>({kcal:a.kcal+x.kcal,protein:a.protein+x.protein,carbs:a.carbs+x.carbs,fat:a.fat+x.fat}),{kcal:0,protein:0,carbs:0,fat:0})}
+function setBar(id,v,t){document.getElementById(id).style.width=Math.min(100,t?100*v/t:0)+'%'}
+function render(){
+ const t=today(), a=totals(t), g=db.targets;
+ document.getElementById('todayLabel').textContent=new Date(t+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+ [['kcal','kcal','kcal'],['protein','protein','protein'],['carbs','carbs','carbs'],['fat','fat','fat']].forEach(([k,id])=>{document.getElementById(id+'Now').textContent=fmt(a[k])+(k==='kcal'?'':' g');document.getElementById(id+'Goal').textContent='of '+g[k]+(k==='kcal'?' kcal':' g');setBar(id+'Bar',a[k],g[k])});
+ document.getElementById('todayFoods').innerHTML=db.foods.filter(x=>x.date===t).slice(-4).reverse().map(x=>`<div class="entry"><div><strong>${esc(x.name)}</strong><small>${x.kcal} kcal · P ${x.protein}g · C ${x.carbs}g · F ${x.fat}g</small></div></div>`).join('')||'<div class="empty">No food logged yet today.</div>';
+ const last=[...db.weights].sort((a,b)=>b.date.localeCompare(a.date))[0];document.getElementById('latestWeight').textContent=last?last.weight.toFixed(1):'—';
+ const week=new Date();week.setDate(week.getDate()-6);document.getElementById('weekWorkouts').textContent=db.workouts.filter(x=>x.date>=week.toISOString().slice(0,10)).length;
+ document.getElementById('foodFilter').value ||= t;document.getElementById('foodDate').value ||= t;document.getElementById('weightDate').value ||= t;document.getElementById('workoutDate').value ||= t;
+ renderFood();renderWeights();renderWorkouts();loadTargets();
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+document.getElementById('foodForm').onsubmit=e=>{e.preventDefault();db.foods.push({id:crypto.randomUUID(),name:document.getElementById('foodName').value.trim(),kcal:num('foodKcal'),protein:num('foodProtein'),carbs:num('foodCarbs'),fat:num('foodFat'),date:document.getElementById('foodDate').value});e.target.reset();document.getElementById('foodDate').value=today();save()};
+document.getElementById('foodFilter').onchange=renderFood;
+function renderFood(){let d=document.getElementById('foodFilter').value||today(),arr=db.foods.filter(x=>x.date===d);document.getElementById('foodList').innerHTML=arr.length?arr.map(x=>`<div class="entry"><div><strong>${esc(x.name)}</strong><small>${x.kcal} kcal · P ${x.protein}g · C ${x.carbs}g · F ${x.fat}g</small></div><button class="danger" onclick="delFood('${x.id}')">Remove</button></div>`).join(''):'<div class="empty">No entries for this date.</div>'}
+function delFood(id){db.foods=db.foods.filter(x=>x.id!==id);save()}
+document.getElementById('weightForm').onsubmit=e=>{e.preventDefault();db.weights.push({id:crypto.randomUUID(),date:document.getElementById('weightDate').value,weight:num('weightValue'),waist:num('waistValue')||null,hips:num('hipsValue')||null});e.target.reset();document.getElementById('weightDate').value=today();save();drawChart()};
+function renderWeights(){let arr=[...db.weights].sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('weightList').innerHTML=arr.slice(0,12).map(x=>`<div class="entry"><div><strong>${x.weight.toFixed(1)} kg · ${x.date}</strong><small>${x.waist?'Waist '+x.waist+' cm':''} ${x.hips?'· Hips '+x.hips+' cm':''}</small></div><button class="danger" onclick="delWeight('${x.id}')">Remove</button></div>`).join('')||'<div class="empty">Add your first weigh-in above.</div>'}
+function delWeight(id){db.weights=db.weights.filter(x=>x.id!==id);save();drawChart()}
+function drawChart(){let c=document.getElementById('weightChart');if(!c)return;let ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);let arr=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date));if(arr.length<2){ctx.fillStyle='#71817b';ctx.font='18px system-ui';ctx.fillText(arr.length?'Add another weigh-in to see your trend':'Your weight trend will appear here',35,120);return}let vals=arr.map(x=>x.weight),min=Math.min(...vals)-.5,max=Math.max(...vals)+.5;ctx.strokeStyle='#e3ebe5';ctx.lineWidth=2;for(let i=0;i<5;i++){let y=25+i*(h-55)/4;ctx.beginPath();ctx.moveTo(35,y);ctx.lineTo(w-15,y);ctx.stroke()}ctx.strokeStyle='#24785d';ctx.lineWidth=5;ctx.beginPath();arr.forEach((x,i)=>{let px=40+i*(w-75)/(arr.length-1),py=20+(max-x.weight)/(max-min)*(h-55);i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.stroke();arr.forEach((x,i)=>{let px=40+i*(w-75)/(arr.length-1),py=20+(max-x.weight)/(max-min)*(h-55);ctx.fillStyle='#24785d';ctx.beginPath();ctx.arc(px,py,6,0,Math.PI*2);ctx.fill()})}
+document.getElementById('workoutForm').onsubmit=e=>{e.preventDefault();db.workouts.push({id:crypto.randomUUID(),date:document.getElementById('workoutDate').value,type:document.getElementById('workoutType').value,notes:document.getElementById('workoutNotes').value});e.target.reset();document.getElementById('workoutDate').value=today();save()};
+function renderWorkouts(){let a=[...db.workouts].sort((x,y)=>y.date.localeCompare(x.date));document.getElementById('workoutList').innerHTML=a.slice(0,20).map(x=>`<div class="entry"><div><strong>${esc(x.type)} · ${x.date}</strong><small>${esc(x.notes||'No notes added')}</small></div><button class="danger" onclick="delWorkout('${x.id}')">Remove</button></div>`).join('')||'<div class="empty">No workouts logged yet.</div>'}
+function delWorkout(id){db.workouts=db.workouts.filter(x=>x.id!==id);save()}
+function loadTargets(){['kcal','protein','carbs','fat'].forEach(k=>document.getElementById('target'+k[0].toUpperCase()+k.slice(1)).value=db.targets[k])}
+document.getElementById('targetForm').onsubmit=e=>{e.preventDefault();db.targets={kcal:num('targetKcal'),protein:num('targetProtein'),carbs:num('targetCarbs'),fat:num('targetFat')};save();alert('Targets saved.')};
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-recomp-backup-'+today()+'.json';a.click();URL.revokeObjectURL(a.href)}
+document.getElementById('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.foods||!x.weights||!x.workouts||!x.targets)throw Error();db=x;save();alert('Backup restored.')}catch(err){alert('That backup file could not be read.')}e.target.value=''};
+function clearData(){if(confirm('Delete all food, weight and workout entries from this device? Export a backup first if you may need them.')){db=structuredClone(defaults);save()}}
+let installPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;document.getElementById('installBtn').hidden=false});
+document.getElementById('installBtn').onclick=async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null}else alert('In Chrome, open the ⋮ menu and choose “Install app” or “Add to Home screen”.')};
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+render();
+</script></body></html>
